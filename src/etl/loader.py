@@ -5,11 +5,6 @@ from src.core.matching import NameMatcher
 from datetime import datetime
 import logging
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 
 class SanctionLoader:
@@ -62,7 +57,7 @@ class SanctionLoader:
                 count = 0
                 for record_dict in parser.parse(file_path):
                     count += 1
-                    if count % 1000 == 0:
+                    if count % 100 == 0:
                         logger.info(f"[{list_type}] Processed {count} records...")
                         self.db.commit()
 
