@@ -1,0 +1,8 @@
+firebase_functions~=0.1.0
+requests
+firebase-admin>=7.0.0
+google-cloud-firestore>=2.0.0
+openpyxl>=3.0.0
+flask>=3.0.0
+flask-cors>=4.0.0
+google-cloud-logging>=3.0.0

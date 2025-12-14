@@ -1,0 +1,230 @@
+{
+  "en": {
+    "home": {
+      "title": "Sanctions Defender",
+      "subtitle": "Advanced sanctions screening and compliance verification",
+      "stats": {
+        "title": "Global Sanctions Coverage",
+        "records": "Sanctions Records",
+        "sources": "Official Sources",
+        "updates": "Updates"
+      },
+      "search": {
+        "title": "Single Search",
+        "description": "Search international sanctions lists (EU, UK, OFAC) to verify individual entities in real-time."
+      },
+      "batch": {
+        "title": "Batch Screening",
+        "description": "Upload Excel or CSV files with company or individual names for comprehensive bulk screening."
+      },
+      "footer": {
+        "sources": "Data sources: EU Consolidated Sanctions List, UK Sanctions List, US OFAC SDN & Non-SDN",
+        "updated": "Last updated: Daily at 04:00 UTC"
+      }
+    },
+    "search": {
+      "title": "Sanctions Defender - Search",
+      "header": "Search",
+      "subtitle": "Search international sanctions lists (EU, UK, OFAC) to verify entities and mitigate risk",
+      "tabs": {
+        "search": "Single Search",
+        "batch": "Batch Screening"
+      },
+      "form": {
+        "query_label": "Search (Name, Organization)",
+        "query_placeholder": "e.g., Putin, Al Qaeda, IRGC",
+        "country_label": "Country",
+        "country_placeholder": "e.g., Russia, Iran, Syria",
+        "program_label": "Program",
+        "all_programs": "All Programs",
+        "sdgt": "SDGT (US Terrorism)",
+        "sdn": "SDN (US Specially Designated)",
+        "ns_plc": "NS-PLC (UN Palest.)",
+        "eu_sanctions": "EU Sanctions",
+        "entity_type_label": "Entity Type",
+        "all_types": "All Types",
+        "individual": "Individual",
+        "company": "Company",
+        "source_label": "Sanctions Source",
+        "all_sources": "All Sources",
+        "eu_source": "EU Sanctions List",
+        "uk_source": "UK Sanctions List",
+        "us_sdn": "US OFAC SDN",
+        "us_nonsdn": "US OFAC Non-SDN",
+        "limit_label": "Results Limit",
+        "search_button": "Search"
+      },
+      "results": {
+        "title": "Results",
+        "matches": "match",
+        "no_results": "✓ No sanctions matches found",
+        "query_time": "ms",
+        "source": "Source",
+        "type": "Type",
+        "country": "Country",
+        "gender": "Gender",
+        "dob": "Date of Birth",
+        "programs": "Programs",
+        "aliases": "Also known as"
+      },
+      "error": "⚠️ ",
+      "connection_error": "❌ Connection error: ",
+      "searching": "Searching sanctions database..."
+    },
+    "batch": {
+      "title": "Sanctions Defender - Batch Screening",
+      "header": "Batch Screening",
+      "subtitle": "Upload Excel or CSV files to screen multiple entities against international sanctions lists",
+      "tabs": {
+        "search": "Single Search",
+        "batch": "Batch Screening"
+      },
+      "entity_type": "Entity Type",
+      "entity_type_company": "Company Names",
+      "entity_type_individual": "Individual Names",
+      "threshold": "Match Threshold (%)",
+      "threshold_hint": "Higher values require stricter matching (recommended: 80)",
+      "file_label": "Upload File (Excel or CSV)",
+      "file_hint": "Supported formats: .xlsx, .xls, .csv (max 10MB)",
+      "file_browse": "Click to browse or drag and drop",
+      "file_remove": "Remove",
+      "submit_button": "Screen Entities",
+      "summary": {
+        "title": "Screening Summary",
+        "total": "Total Screened",
+        "clear": "Clear",
+        "matches": "Potential Matches",
+        "threshold_used": "Threshold Used"
+      },
+      "result_status": {
+        "clear": "CLEAR",
+        "match_singular": "POTENTIAL MATCH",
+        "match_plural": "POTENTIAL MATCHES"
+      },
+      "match_info": {
+        "source": "Source",
+        "type": "Type",
+        "country": "Country",
+        "programs": "Programs"
+      },
+      "export": "📥 Export Results (CSV)",
+      "processing": "Processing file and screening entities...",
+      "error": "⚠️ ",
+      "connection_error": "❌ Connection error: "
+    }
+  },
+  "sl": {
+    "home": {
+      "title": "Zaščita pred sankcijami",
+      "subtitle": "Napredna preverjanja sankcij in preverka skladnosti",
+      "stats": {
+        "title": "Globalna pokrijenost sankcij",
+        "records": "Zapisov sankcij",
+        "sources": "Uradnih virov",
+        "updates": "Posodobitve"
+      },
+      "search": {
+        "title": "Enojno iskanje",
+        "description": "Iščite mednarodni seznam sankcij (EU, UK, OFAC), da preverite posamezne subjekte v realnem času."
+      },
+      "batch": {
+        "title": "Množinsko preverjanje",
+        "description": "Naložite datoteke Excel ali CSV z imeni podjetij ali posameznikov za obsežno množinsko preverjanje."
+      },
+      "footer": {
+        "sources": "Viri podatkov: Konsolidirani seznam sankcij EU, seznam sankcij UK, US OFAC SDN in Non-SDN",
+        "updated": "Zadnja posodobitev: Dnevno ob 04:00 UTC"
+      }
+    },
+    "search": {
+      "title": "Zaščita pred sankcijami - Iskanje",
+      "header": "Iskanje",
+      "subtitle": "Iščite mednarodni seznam sankcij (EU, UK, OFAC), da preverite subjekte in zmanjšate tveganje",
+      "tabs": {
+        "search": "Enojno iskanje",
+        "batch": "Množinsko preverjanje"
+      },
+      "form": {
+        "query_label": "Iskanje (Ime, Organizacija)",
+        "query_placeholder": "npr. Putin, Al Qaeda, IRGC",
+        "country_label": "Država",
+        "country_placeholder": "npr. Rusija, Iran, Sirija",
+        "program_label": "Program",
+        "all_programs": "Vsi programi",
+        "sdgt": "SDGT (Terorizem ZDA)",
+        "sdn": "SDN (Posebej označeni ZDA)",
+        "ns_plc": "NS-PLC (ZN Palest.)",
+        "eu_sanctions": "Sankcije EU",
+        "entity_type_label": "Vrsta subjekta",
+        "all_types": "Vse vrste",
+        "individual": "Posameznik",
+        "company": "Podjetje",
+        "source_label": "Vir sankcij",
+        "all_sources": "Vsi viri",
+        "eu_source": "Seznam sankcij EU",
+        "uk_source": "Seznam sankcij UK",
+        "us_sdn": "US OFAC SDN",
+        "us_nonsdn": "US OFAC Non-SDN",
+        "limit_label": "Omejitev rezultatov",
+        "search_button": "Iskanje"
+      },
+      "results": {
+        "title": "Rezultati",
+        "matches": "ujemanja",
+        "no_results": "✓ Ni najdenih ujemanj sankcij",
+        "query_time": "ms",
+        "source": "Vir",
+        "type": "Vrsta",
+        "country": "Država",
+        "gender": "Spol",
+        "dob": "Datum rojstva",
+        "programs": "Programi",
+        "aliases": "Poznano tudi kot"
+      },
+      "error": "⚠️ ",
+      "connection_error": "❌ Napaka pri povezavi: ",
+      "searching": "Iskanje v bazi sankcij..."
+    },
+    "batch": {
+      "title": "Zaščita pred sankcijami - Množinsko preverjanje",
+      "header": "Množinsko preverjanje",
+      "subtitle": "Naložite datoteke Excel ali CSV za preverjanje več subjektov glede na mednarodni seznam sankcij",
+      "tabs": {
+        "search": "Enojno iskanje",
+        "batch": "Množinsko preverjanje"
+      },
+      "entity_type": "Vrsta subjekta",
+      "entity_type_company": "Imena podjetij",
+      "entity_type_individual": "Imena posameznikov",
+      "threshold": "Prag ujemanja (%)",
+      "threshold_hint": "Višje vrednosti zahtevajo strožje ujemanje (priporočeno: 80)",
+      "file_label": "Naložite datoteko (Excel ali CSV)",
+      "file_hint": "Podprti formati: .xlsx, .xls, .csv (največ 10MB)",
+      "file_browse": "Kliknite za brskanje ali povlecite in spustite",
+      "file_remove": "Odstrani",
+      "submit_button": "Preverite subjekte",
+      "summary": {
+        "title": "Povzetek preverjanja",
+        "total": "Skupno preverjenih",
+        "clear": "Jasno",
+        "matches": "Možna ujemanja",
+        "threshold_used": "Uporabljen prag"
+      },
+      "result_status": {
+        "clear": "JASNO",
+        "match_singular": "MOŽNO UJEMANJE",
+        "match_plural": "MOŽNA UJEMANJA"
+      },
+      "match_info": {
+        "source": "Vir",
+        "type": "Vrsta",
+        "country": "Država",
+        "programs": "Programi"
+      },
+      "export": "📥 Izvezite rezultate (CSV)",
+      "processing": "Obdelava datoteke in preverjanje subjektov...",
+      "error": "⚠️ ",
+      "connection_error": "❌ Napaka pri povezavi: "
+    }
+  }
+}

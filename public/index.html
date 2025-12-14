@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="home.title">Sanctions Defender - Home</title>
+    <link rel="stylesheet" href="i18n.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .language-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .lang-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .feature h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .feature p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .feature-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-link:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .stat {
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            
+            .header p {
+                font-size: 16px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <button class="lang-btn active" onclick="changeLanguage('en')" data-lang="en">English</button>
+        <button class="lang-btn" onclick="changeLanguage('sl')" data-lang="sl">Slovenščina</button>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 data-i18n="home.title">🛡️ Sanctions Defender</h1>
+            <p data-i18n="home.subtitle">Advanced sanctions screening and compliance verification</p>
+        </div>
+        
+        <div class="stats">
+            <h2 data-i18n="home.stats.title">Global Sanctions Coverage</h2>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">30,382+</div>
+                    <div class="stat-label" data-i18n="home.stats.records">Sanctions Records</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label" data-i18n="home.stats.sources">Official Sources</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">Daily</div>
+                    <div class="stat-label" data-i18n="home.stats.updates">Updates</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <a href="search.html" class="feature">
+                <div class="feature-icon">🔍</div>
+                <h2 data-i18n="home.search.title">Single Search</h2>
+                <p data-i18n="home.search.description">Search international sanctions lists (EU, UK, OFAC) to verify individual entities in real-time.</p>
+                <span class="feature-link" data-i18n="home.search.title">Start Searching →</span>
+            </a>
+            
+            <a href="batch_screening.html" class="feature">
+                <div class="feature-icon">📊</div>
+                <h2 data-i18n="home.batch.title">Batch Screening</h2>
+                <p data-i18n="home.batch.description">Upload Excel or CSV files with company or individual names for comprehensive bulk screening.</p>
+                <span class="feature-link" data-i18n="home.batch.title">Batch Screen →</span>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p data-i18n="home.footer.sources">Data sources: EU Consolidated Sanctions List, UK Sanctions List, US OFAC SDN & Non-SDN</p>
+            <p style="margin-top: 10px;" data-i18n="home.footer.updated">Last updated: Daily at 04:00 UTC</p>
+        </div>
+    </div>
+    
+    <script src="i18n.js"></script>
+    <script>
+        // Update active language button
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-lang="${i18n.getLanguage()}"]`).classList.add('active');
+    </script>
+</body>
+</html>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .feature h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .feature p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .feature-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-link:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .stat {
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            
+            .header p {
+                font-size: 16px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Sanctions Defender</h1>
+            <p>Advanced sanctions screening and compliance verification</p>
+        </div>
+        
+        <div class="stats">
+            <h2>Global Sanctions Coverage</h2>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">30,382+</div>
+                    <div class="stat-label">Sanctions Records</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Official Sources</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">Daily</div>
+                    <div class="stat-label">Updates</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <a href="search.html" class="feature">
+                <div class="feature-icon">🔍</div>
+                <h2>Single Search</h2>
+                <p>Search international sanctions lists (EU, UK, OFAC) to verify individual entities in real-time.</p>
+                <span class="feature-link">Start Searching →</span>
+            </a>
+            
+            <a href="batch_screening.html" class="feature">
+                <div class="feature-icon">📊</div>
+                <h2>Batch Screening</h2>
+                <p>Upload Excel or CSV files with company or individual names for comprehensive bulk screening.</p>
+                <span class="feature-link">Batch Screen →</span>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>Data sources: EU Consolidated Sanctions List, UK Sanctions List, US OFAC SDN & Non-SDN</p>
+            <p style="margin-top: 10px;">Last updated: Daily at 04:00 UTC</p>
+        </div>
+    </div>
+</body>
+</html>

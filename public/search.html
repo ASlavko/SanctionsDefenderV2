@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="search.title">Sanctions Defender - Search</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      header p {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .search-box {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .search-form {
+        display: grid;
+        gap: 20px;
+      }
+
+      .form-group {
+        display: grid;
+        gap: 8px;
+      }
+
+      label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      input,
+      select {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: white;
+      }
+
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .results {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .results-header h2 {
+        color: #333;
+        font-size: 20px;
+      }
+
+      .query-info {
+        color: #666;
+        font-size: 12px;
+      }
+
+      .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+
+      .result-item {
+        border: 1px solid #eee;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      .result-item:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+      }
+
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+      }
+
+      .result-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .confidence-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+        min-width: 70px;
+      }
+
+      .confidence-high {
+        background: linear-gradient(135deg, #34a853 0%, #1e8e3e 100%);
+      }
+
+      .confidence-medium {
+        background: linear-gradient(135deg, #fbbc04 0%, #f57c00 100%);
+      }
+
+      .confidence-low {
+        background: linear-gradient(135deg, #ea4335 0%, #c5221f 100%);
+      }
+
+      .result-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .detail {
+        display: grid;
+        gap: 4px;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .detail-value {
+        color: #333;
+        font-size: 14px;
+      }
+
+      .aliases {
+        background: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .aliases-label {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 12px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .alias-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .alias-tag {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .stats {
+        display: flex;
+        gap: 20px;
+        font-size: 12px;
+        color: #666;
+        align-items: center;
+      }
+
+      .search-phase {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .source-section {
+        margin-bottom: 30px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .source-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .source-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .match-count {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .source-section .result-item {
+        border: none;
+        border-bottom: 1px solid #eee;
+        border-radius: 0;
+        margin-bottom: 0;
+      }
+
+      .source-section .result-item:last-child {
+        border-bottom: none;
+      }
+
+      .no-matches {
+        padding: 20px;
+        text-align: center;
+        color: #999;
+        background: #f9f9f9;
+      }
+
+      .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        color: #667eea;
+        background: #f5f5f5;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+
+      .loading-indicator .spinner {
+        border-color: rgba(102, 126, 234, 0.3);
+        border-top-color: #667eea;
+        width: 30px;
+        height: 30px;
+        margin: 0 auto 10px;
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      .nav-tab {
+        background: white;
+        color: #667eea;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .nav-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      @media (max-width: 768px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .result-header {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .nav-tabs {
+          flex-direction: column;
+        }
+      }
+
+      .language-selector {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .lang-btn {
+        background: white;
+        border: 2px solid #667eea;
+        color: #667eea;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        transition: all 0.3s;
+      }
+
+      .lang-btn:hover {
+        background: #667eea;
+        color: white;
+      }
+
+      .lang-btn.active {
+        background: #667eea;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="language-selector">
+      <button
+        class="lang-btn active"
+        onclick="changeLanguage('en')"
+        data-lang="en"
+      >
+        English
+      </button>
+      <button class="lang-btn" onclick="changeLanguage('sl')" data-lang="sl">
+        SL
+      </button>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>🛡️ <span data-i18n="search.header">Sanctions Defender</span></h1>
+        <p data-i18n="search.subtitle">
+          Search international sanctions lists (EU, UK, OFAC) to verify entities
+          and mitigate risk
+        </p>
+      </header>
+
+      <div class="nav-tabs">
+        <a
+          href="search.html"
+          class="nav-tab active"
+          data-i18n="search.tabs.search"
+          >Single Search</a
+        >
+        <a
+          href="batch_screening.html"
+          class="nav-tab"
+          data-i18n="search.tabs.batch"
+          >Batch Screening</a
+        >
+      </div>
+
+      <div class="search-box">
+        <form class="search-form" id="searchForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="query" data-i18n="search.form.query_label"
+                >Search (Name, Organization)</label
+              >
+              <input
+                type="text"
+                id="query"
+                name="q"
+                placeholder="e.g., Putin, Al Qaeda, IRGC"
+                data-i18n-placeholder="search.form.query_placeholder"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="country" data-i18n="search.form.country_label"
+                >Country</label
+              >
+              <input
+                type="text"
+                id="country"
+                name="country"
+                placeholder="e.g., Russia, Iran, Syria"
+                data-i18n-placeholder="search.form.country_placeholder"
+              />
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="search.form.entity_type_label"
+                >Entity Type</label
+              >
+              <div
+                style="
+                  display: flex;
+                  gap: 20px;
+                  align-items: center;
+                  padding-top: 8px;
+                "
+              >
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value="company"
+                    checked
+                    style="width: auto; margin: 0"
+                  />
+                  <span data-i18n="search.form.company">Company</span>
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value="individual"
+                    style="width: auto; margin: 0"
+                  />
+                  <span data-i18n="search.form.individual">Individual</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="source" data-i18n="search.form.source_label"
+                >Sanctions Source</label
+              >
+              <select id="source" name="source">
+                <option value="" data-i18n="search.form.all_sources">
+                  All Sources
+                </option>
+                <option value="EU" data-i18n="search.form.eu_source">
+                  EU Sanctions List
+                </option>
+                <option value="UK" data-i18n="search.form.uk_source">
+                  UK Sanctions List
+                </option>
+                <option value="US_SDN_SIMPLE" data-i18n="search.form.us_sdn">
+                  US OFAC SDN
+                </option>
+                <option
+                  value="US_NON_SDN_SIMPLE"
+                  data-i18n="search.form.us_nonsdn"
+                >
+                  US OFAC Non-SDN
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="limit" data-i18n="search.form.limit_label"
+                >Results Limit</label
+              >
+              <input
+                type="number"
+                id="limit"
+                name="limit"
+                value="50"
+                min="1"
+                max="500"
+              />
+            </div>
+          </div>
+
+          <button type="submit" data-i18n="search.form.search_button">
+            Search
+          </button>
+        </form>
+      </div>
+
+      <div id="resultsContainer"></div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script>
+      const API_URL =
+        "https://europe-west1-sanction-defender-firebase.cloudfunctions.net/search_sanctions";
+
+      // Initialize i18n on page load
+      window.addEventListener("DOMContentLoaded", async () => {
+        await i18n.load();
+        i18n.updatePageLanguage();
+
+        // Set active language button
+        updateLanguageButtons();
+      });
+
+      // Change language function
+      function changeLanguage(lang) {
+        i18n.setLanguage(lang);
+        i18n.updatePageLanguage();
+        updateLanguageButtons();
+      }
+
+      // Update active language button visual state
+      function updateLanguageButtons() {
+        const currentLang = i18n.getLanguage();
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          if (btn.getAttribute("data-lang") === currentLang) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          search();
+        });
+
+      async function search() {
+        const formData = new FormData(document.getElementById("searchForm"));
+        const params = new URLSearchParams(formData);
+
+        // Remove empty parameters
+        for (let [key, value] of params) {
+          if (!value) params.delete(key);
+        }
+
+        const container = document.getElementById("resultsContainer");
+        container.innerHTML =
+          '<div class="loading"><div class="spinner"></div><p>Quick search in progress...</p></div>';
+
+        try {
+          // Phase 1: Quick search
+          const response = await fetch(`${API_URL}?${params}`);
+          const data = await response.json();
+
+          if (data.status === "partial") {
+            // Display quick results immediately
+            displayResultsBySource(data, true);
+            
+            // Phase 2: Start polling for deep search results
+            if (data.request_id) {
+              pollForDeepResults(data.request_id, params);
+            }
+          } else if (data.status === "success") {
+            // Direct success (fallback for compatibility)
+            displayResultsBySource(data, false);
+          } else if (data.status === "error") {
+            container.innerHTML = `<div class="error">⚠️ ${data.error}</div>`;
+          } else {
+            container.innerHTML = `<div class="error">⚠️ Unexpected response format</div>`;
+          }
+        } catch (error) {
+          container.innerHTML = `<div class="error">❌ Connection error: ${error.message}</div>`;
+        }
+      }
+
+      async function pollForDeepResults(requestId, params) {
+        const POLL_INTERVAL = 2000; // Check every 2 seconds
+        const MAX_ATTEMPTS = 40; // 80 seconds max
+        let attempts = 0;
+
+        const STATUS_API_URL = "https://europe-west1-sanction-defender-firebase.cloudfunctions.net/search_status";
+
+        const poll = async () => {
+          attempts++;
+          
+          try {
+            const response = await fetch(`${STATUS_API_URL}?request_id=${requestId}`);
+            const data = await response.json();
+
+            if (data.status === "success") {
+              // Deep search complete - update results
+              displayResultsBySource(data, false);
+            } else if (data.status === "partial") {
+              // Still processing
+              if (attempts < MAX_ATTEMPTS) {
+                setTimeout(poll, POLL_INTERVAL);
+              } else {
+                // Timeout - show message but keep quick results
+                const container = document.getElementById("resultsContainer");
+                const notice = document.createElement("div");
+                notice.className = "info-notice";
+                notice.innerHTML = "⚠️ Deep search timed out. Showing quick results only.";
+                container.insertBefore(notice, container.firstChild);
+              }
+            } else if (data.status === "error") {
+              // Error in deep search - show message but keep quick results
+              const container = document.getElementById("resultsContainer");
+              const notice = document.createElement("div");
+              notice.className = "error-notice";
+              notice.innerHTML = `⚠️ Deep search error: ${data.error}. Showing quick results.`;
+              container.insertBefore(notice, container.firstChild);
+            }
+          } catch (error) {
+            console.error("Polling error:", error);
+            if (attempts < MAX_ATTEMPTS) {
+              setTimeout(poll, POLL_INTERVAL);
+            }
+          }
+        };
+
+        // Start polling
+        setTimeout(poll, POLL_INTERVAL);
+      }
+
+      function displayResultsBySource(data, isQuick) {
+        const container = document.getElementById("resultsContainer");
+        const { matches, count, query_time_ms, search_phase } = data;
+
+        if (count === 0 && !isQuick) {
+          container.innerHTML =
+            '<div class="results"><div class="no-results">✓ No sanctions matches found</div></div>';
+          return;
+        }
+
+        // Group results by source
+        const resultsBySource = {};
+        matches.forEach((match) => {
+          const source = match.source || "UNKNOWN";
+          if (!resultsBySource[source]) {
+            resultsBySource[source] = [];
+          }
+          resultsBySource[source].push(match);
+        });
+
+        // Define source order and names
+        const sourceOrder = [
+          { key: "EU", name: "EU Sanctions List" },
+          { key: "UK", name: "UK Sanctions List" },
+          { key: "US_SDN_SIMPLE", name: "US OFAC SDN" },
+          { key: "US_NON_SDN_SIMPLE", name: "US OFAC Non-SDN" },
+        ];
+
+        // Determine search phase display
+        const phaseIndicator = isQuick 
+          ? '<span class="search-phase" style="background: #ffa500; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">Quick Search</span>'
+          : '<span class="search-phase" style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">Deep Search Complete</span>';
+
+        // Show deep search indicator if still in quick phase
+        const deepSearchIndicator = isQuick 
+          ? '<div class="loading-indicator" style="background: #fff3cd; border-left: 4px solid #ffa500; padding: 12px; margin-bottom: 20px; border-radius: 4px;"><strong>🔍 Deep search in progress...</strong> More accurate results will appear shortly.</div>'
+          : '';
+
+        let html = `
+          <div class="results">
+            ${deepSearchIndicator}
+            <div class="results-header">
+              <h2>Sanctions Database Search Results</h2>
+              <div class="stats">
+                ${phaseIndicator}
+                <span>Total Matches: ${count}</span>
+                <span>⏱️ ${query_time_ms}ms</span>
+              </div>
+            </div>
+        `;
+
+        // Display results grouped by source
+        sourceOrder.forEach(({ key, name }) => {
+          const sourceMatches = resultsBySource[key] || [];
+
+          html += `
+            <div class="source-section">
+              <div class="source-header">
+                <h3>${name}</h3>
+                <span class="match-count">${sourceMatches.length} match${
+            sourceMatches.length !== 1 ? "es" : ""
+          }</span>
+              </div>
+          `;
+
+          if (sourceMatches.length === 0) {
+            html += '<div class="no-matches">No matches found</div>';
+          } else {
+            sourceMatches.forEach((match) => {
+              const confidence = match.confidence;
+              let confClass = "confidence-low";
+              if (confidence >= 80) confClass = "confidence-high";
+              else if (confidence >= 50) confClass = "confidence-medium";
+
+              html += `
+                <div class="result-item">
+                  <div class="result-header">
+                    <div class="result-name">${escapeHtml(match.name)}</div>
+                    <div class="confidence-badge ${confClass}">
+                      ${confidence}% match
+                    </div>
+                  </div>
+                  
+                  <div class="result-details">
+                    <div class="detail">
+                      <div class="detail-label">Type</div>
+                      <div class="detail-value">${
+                        match.entity_type || "N/A"
+                      }</div>
+                    </div>
+                    <div class="detail">
+                      <div class="detail-label">Country</div>
+                      <div class="detail-value">${match.country || "N/A"}</div>
+                    </div>
+                    <div class="detail">
+                      <div class="detail-label">Gender</div>
+                      <div class="detail-value">${match.gender || "N/A"}</div>
+                    </div>
+                    <div class="detail">
+                      <div class="detail-label">Date of Birth</div>
+                      <div class="detail-value">${match.dob || "N/A"}</div>
+                    </div>
+                    <div class="detail">
+                      <div class="detail-label">Programs</div>
+                      <div class="detail-value">${
+                        match.programs.join(", ") || "N/A"
+                      }</div>
+                    </div>
+                  </div>
+                  
+                  ${
+                    match.aliases && match.aliases.length > 0
+                      ? `
+                      <div class="aliases">
+                        <div class="aliases-label">Also known as</div>
+                        <div class="alias-list">
+                          ${match.aliases
+                            .map(
+                              (a) =>
+                                `<span class="alias-tag">${escapeHtml(
+                                  a
+                                )}</span>`
+                            )
+                            .join("")}
+                        </div>
+                      </div>
+                  `
+                      : ""
+                  }
+                </div>
+              `;
+            });
+          }
+
+          html += "</div>"; // Close source-section
+        });
+
+        html += "</div>"; // Close results
+        container.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    </script>
+  </body>
+</html>

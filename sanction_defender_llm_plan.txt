@@ -1,0 +1,211 @@
+
+SANCTION DEFENDER — LLM IMPLEMENTATION PLAN (for use in VS Code)
+Date: 2025-12-08
+
+Goal
+Build a reliable bulk sanctions screening web app that:
+  • Downloads EU, UK, and US (SDN + NON‑SDN) sanctions lists daily from official sources.
+  • Lets users upload Excel files of names (companies or individuals) and performs fuzzy screening.
+  • Supports reviewing possible hits, confirming or clearing them, revoking past decisions, auto‑applying prior decisions, and exporting a final report.
+  • Exposes a real‑time dashboard and a company-specific history + full audit trail.
+
+Core Principles
+  • Reliability: scheduled downloads, freshness checks, retry/backoff, audit logging.
+  • Precision: entity-type matching (company vs individual), ignored/common words to cut false positives, structured fuzzy scoring.
+  • Compliance: immutable audit trail, report shows if a result was auto‑applied (who/when).
+  • Multitenancy & Roles: Super Admin (global), Company Admin (per-company config), Standard User (screening & decisions).
+
+Target Stack (LLM-friendly, minimal ops)
+  • Frontend: Firebase Hosting + React (or minimalist HTML/JS).
+  • Identity: Firebase Authentication + Custom Claims (role + companyId).
+  • Backend: Cloud Functions for Firebase (HTTP + Storage triggers + Pub/Sub via Cloud Scheduler).
+  • Data: Cloud Firestore (real-time) and Cloud Storage (XML sources, uploads, reports).
+  • Reports: Cloud Function generates PDF/CSV.
+
+Official Data Sources (for download functions)
+  • EU consolidated list: https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content?token=dG9rZW4tMjAxNw
+  • UK sanctions list XML: https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml
+  • US OFAC SDN/NON-SDN enhanced XML:
+      - SDN: https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ENHANCED.XML
+      - NON-SDN: https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/CONS_ENHANCED.XML
+
+Data Model (normalized Firestore schemas)
+1) sanctions_entities
+   id: <source>_<uniqueId>              // e.g., EU_EU.3502.46, UK_RUS0268, US_2674
+   unique_sanction_id: string           // original ID from source
+   sanction_source: enum                // EU | UK | US_SDN | US_NON_SDN
+   entity_type: enum                    // "individual" | "company" (ignore ships/aircraft/vessels)
+   main_name: string
+   aliases: string[]
+   last_updated_on_source: date         // EU:fileGenerationDate; UK:DateGenerated; US:Publish_Date
+   details: object {                    // context surfaced in review/report
+     un_id?: string
+     url?: string
+     program?: string
+     gender?: string
+     country?: string
+     dob?: string
+     remark?: string
+   }
+   created_at: timestamp
+   updated_at: timestamp
+
+2) screening_jobs
+   id: string
+   company_id: string
+   user_id: string
+   input_entity_type: enum              // "company" (default) | "individual"
+   file_ref: string                     // Cloud Storage path
+   status: enum                         // pending | running | completed | failed
+   sources_used: string[]               // e.g., ["EU","UK","US_SDN"]
+   metrics: object per source           // { EU: {total, clear, possible}, ... }
+   started_at: timestamp
+   finished_at?: timestamp
+   threshold: number                    // 0..1 (from config)
+   ignored_words: string[]              // applied during preprocessing
+
+3) screening_results
+   id: string
+   job_id: string
+   screened_name: string
+   candidate: object {
+     entity_id: string                  // sanctions_entities.id
+     main_name: string
+     sanction_source: string
+     entity_type: string
+     match_score: number                // 0..1
+     autoApplied: boolean
+     prevDecision?: { status, by_user, at }
+   }
+   status: enum                         // clear | possible_hit | confirmed_hit | cleared
+   decided_by?: string
+   decided_at?: timestamp
+
+4) stored_decisions
+   id: string                           // entity_id (identical sanctioned entity ID)
+   pairs: [
+     {
+       screened_name: string
+       status: enum                     // confirmed_hit | cleared
+       by_user: string
+       company_id: string
+       at: timestamp
+       revoked: boolean
+     }
+   ]
+
+5) audit_trail
+   id: string
+   timestamp: timestamp
+   event_type: enum                     // download_success|download_failure|screening_initiated|user_decision_confirm|user_decision_clear|user_decision_revoke|report_download|recalibration_change
+   user_id?: string
+   company_id?: string
+   details: object                      // event-specific payload
+
+6) config_global / config_company
+   threshold: number                    // default 0.85 (tunable)
+   ignored_words: string[]              // e.g., ["company","international","export","import","gmbh","d.o.o.","ltd","inc"]
+   sources_enabled: string[]            // e.g., ["EU","UK","US_SDN","US_NON_SDN"]
+
+Roles & Access (Auth claims + Firestore Rules)
+  • Super Admin: full read/write, manage global config, company onboarding.
+  • Company Admin: manage users in company, edit company config, revoke decisions.
+  • Standard User: upload, run screening, decide on possible hits, download reports.
+  • Rules: isolate by companyId; Super Admin bypass. stored_decisions are scoped per company.
+
+Download & Parse (per-source functions)
+  • EU parse
+    - unique_sanction_id = Entity_EU_ReferenceNumber
+    - entity_type = map(Entity_SubjectType: P→individual, E→company)
+    - names/aliases = all NameAlias_WholeName entries grouped by unique ID
+    - last_updated_on_source = fileGenerationDate
+    - details = Entity_UnitedNationId, Entity_Regulation_PublicationUrl, Entity_Regulation_Programme, NameAlias_Gender, Address_CountryIso2Code, NameAlias_Function, ...
+  • UK parse
+    - unique_sanction_id = UniqueID
+    - entity_type = map(IndividualEntityShip: Individual→individual, Entity→company; Ship→ignored)
+    - main_name = concat(Name1..Name6, skip empty)
+    - last_updated_on_source = DateGenerated
+    - details = UNReferenceNumber, RegimeName, Gender, AddressCountry, Nationality, CountryOfBirth, UKStatementofReasons
+  • US (SDN/NON‑SDN) parse
+    - unique_sanction_id = ns1:uid
+    - entity_type = map(ns1:sdnType: Individual→individual, Entity→company; Aircraft/Vessel→ignored)
+    - main_name/aliases = combine ns1:lastName/ns1:firstName (+ lastName3/firstName4 variants)
+    - last_updated_on_source = ns1:Publish_Date (with ns1:Record_Count sanity check)
+    - details = ns1:program, ns1:dateOfBirth, gender
+
+Screening Pipeline (Storage trigger → batch processor)
+  1. User uploads Excel → record screening_job (status=pending), audit=screening_initiated.
+  2. Preprocessing
+     - Apply input_entity_type filter (company or individual only).
+     - Normalize names: lowercase, unicode, strip diacritics.
+     - Tokenize and remove/down‑weight ignored_words (config-driven).
+  3. Auto‑apply decisions FIRST
+     - Lookup stored_decisions by entity_id + screened_name (exact pair).
+     - If found and not revoked → create result with autoApplied=true, attach prevDecision metadata.
+  4. Fuzzy matching
+     - Compare against sanctions_entities of the same entity_type.
+     - Score using combined metrics (e.g., Jaro‑Winkler + token n‑gram).
+     - If score >= threshold → possible_hit, else clear.
+  5. Stream results to Firestore; update screening_jobs.metrics in real time.
+
+Decision & Revocation Flow
+  • Review queue lists all possible_hit candidates (with source context, URL, UN ID, program, DOB, etc.).
+  • Actions: Confirm hit OR Clear (which sets status=cleared).
+  • Store decision under stored_decisions (scoped per company) keyed by entity_id; add audit entry.
+  • Revocation: mark pairs[].revoked=true, add audit entry; future screenings must ignore revoked decisions.
+
+Reporting & History
+  • Report fields: screened_name, final_status, date_of_screening, user, sanction_source, entity_type, sanctioned_entity_id, main_name, aliases, context fields.
+  • Auto‑applied indicator: include previousDecision {by, at}.
+  • History page: filter by date range, user, event_type, source; export CSV.
+
+Real-time Dashboard (during screening)
+  • Per source: total, clear, possible; overall progress bar.
+  • Latest audit events list.
+
+Notifications & Reliability
+  • On download_failure: notify Super Admin (email/Slack/Teams), log audit, retry with exponential backoff.
+  • Freshness check: compare last_updated_on_source vs today; warn if outdated.
+
+Testing Checklist
+  • Parser correctness on sample sets (EU/UK/US): IDs, types, names, dates.
+  • Fuzzy behavior: misspellings, legal forms, translations; ignored_words effectiveness.
+  • Auto‑apply + revocation: verify audit entries and future behavior.
+  • Security rules: company isolation; Super Admin access.
+
+LLM Tasks (prompt-ready steps)
+  1) Write Cloud Function code to download and parse EU list → sanctions_entities.
+  2) Write Cloud Function code to parse UK and US (SDN + NON‑SDN) lists.
+  3) Implement Firestore schemas and Security Rules enforcing company scoping.
+  4) Implement Storage trigger to start_screening_job and batch processing loop.
+  5) Implement fuzzy matching utility (normalization, tokenization, scoring, threshold).
+  6) Implement decisions APIs (confirm, clear, revoke) → stored_decisions + audit.
+  7) Implement report generator (PDF/CSV) with auto‑applied metadata.
+  8) Implement dashboard and history UI components (React).
+  9) Implement global/company config UIs and apply them in pipeline.
+ 10) Implement notifications for failures and freshness checks.
+
+Configuration Defaults (can be overridden per company)
+  • threshold = 0.85
+  • ignored_words = ["company","international","export","import","gmbh","d.o.o.","ltd","inc"]
+  • sources_enabled = ["EU","UK","US_SDN","US_NON_SDN"]
+
+Open Questions to Confirm
+  • Excel format: single column vs selectable column mapping in UI?
+  • Max names per job (impacts batching and timeouts)?
+  • Preferred notifications channel (email vs Slack/Teams)?
+  • Report formats priority (PDF vs CSV/Excel)?
+  • NON‑SDN usage from US (enable from start or later)?
+  • Who can revoke decisions (Company Admin only or also Standard User)?
+
+File/Module Naming Suggestions (VS Code project)
+  • functions/download_sanctions_lists.{py|js}
+  • functions/parse_eu.{py|js}, functions/parse_uk.{py|js}, functions/parse_us.{py|js}
+  • functions/start_screening_job.{py|js}
+  • functions/process_screening_batch.{py|js}
+  • functions/decisions_api.{py|js}
+  • functions/generate_report.{py|js}
+  • web/src/components/Upload.tsx, Dashboard.tsx, ReviewQueue.tsx, History.tsx, Settings.tsx
+  • firestore.rules, firebase.json, .firebaserc
+
+End of Plan

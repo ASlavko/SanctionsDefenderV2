@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="batch.title">Sanctions Defender - Batch Screening</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      header p {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      .nav-tab {
+        background: white;
+        color: #667eea;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .nav-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .upload-box {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .upload-form {
+        display: grid;
+        gap: 20px;
+      }
+
+      .form-group {
+        display: grid;
+        gap: 8px;
+      }
+
+      label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .radio-option input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .radio-option label {
+        cursor: pointer;
+        font-weight: 500;
+        margin: 0;
+      }
+
+      .file-upload-area {
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9ff;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .file-upload-area:hover {
+        border-color: #764ba2;
+        background: #f0f2ff;
+      }
+
+      .file-upload-area.drag-over {
+        border-color: #764ba2;
+        background: #e8eaff;
+        transform: scale(1.02);
+      }
+
+      .file-upload-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .file-upload-text {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .file-upload-hint {
+        color: #999;
+        font-size: 12px;
+      }
+
+      .file-selected {
+        background: #e8f5e9;
+        border: 2px solid #4caf50;
+        padding: 15px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .file-selected-icon {
+        font-size: 24px;
+      }
+
+      .file-selected-info {
+        flex: 1;
+      }
+
+      .file-selected-name {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .file-selected-size {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .file-remove {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      input[type="number"],
+      input[type="file"] {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: white;
+      }
+
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .results {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .summary-box {
+        background: #f8f9ff;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+      }
+
+      .summary-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+      }
+
+      .stat.clear .stat-value {
+        color: #4caf50;
+      }
+
+      .stat.warning .stat-value {
+        color: #ff9800;
+      }
+
+      .results-list {
+        display: grid;
+        gap: 15px;
+      }
+
+      .result-item {
+        border: 1px solid #eee;
+        padding: 20px;
+        border-radius: 4px;
+      }
+
+      .result-item.clear {
+        border-left: 4px solid #4caf50;
+      }
+
+      .result-item.potential-match {
+        border-left: 4px solid #ff9800;
+        background: #fff8f0;
+      }
+
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .result-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .result-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .result-status.clear {
+        background: #4caf50;
+        color: white;
+      }
+
+      .result-status.potential-match {
+        background: #ff9800;
+        color: white;
+      }
+
+      .match-details {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+      }
+
+      .match-item {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+
+      .match-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .match-name {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .confidence-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+      }
+
+      .match-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .info-item {
+        display: flex;
+        gap: 4px;
+      }
+
+      .info-label {
+        font-weight: 600;
+      }
+
+      .error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .export-button {
+        background: #4caf50;
+        margin-top: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .nav-tabs {
+          flex-direction: column;
+        }
+
+        .summary-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .language-selector {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .lang-btn {
+        background: white;
+        border: 2px solid #667eea;
+        color: #667eea;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        transition: all 0.3s;
+      }
+
+      .lang-btn:hover {
+        background: #667eea;
+        color: white;
+      }
+
+      .lang-btn.active {
+        background: #667eea;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="language-selector">
+      <button
+        class="lang-btn active"
+        onclick="changeLanguage('en')"
+        data-lang="en"
+      >
+        English
+      </button>
+      <button class="lang-btn" onclick="changeLanguage('sl')" data-lang="sl">
+        SL
+      </button>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>🛡️ <span data-i18n="batch.header">Batch Screening</span></h1>
+        <p data-i18n="batch.subtitle">
+          Upload Excel or CSV files to screen multiple entities against
+          international sanctions lists
+        </p>
+      </header>
+
+      <div class="nav-tabs">
+        <a href="search.html" class="nav-tab" data-i18n="batch.tabs.search"
+          >Single Search</a
+        >
+        <a
+          href="batch_screening.html"
+          class="nav-tab active"
+          data-i18n="batch.tabs.batch"
+          >Batch Screening</a
+        >
+      </div>
+
+      <div class="upload-box">
+        <form class="upload-form" id="uploadForm">
+          <div class="form-group">
+            <label data-i18n="batch.entity_type">Entity Type</label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="typeCompany"
+                  name="entity_type"
+                  value="company"
+                  checked
+                />
+                <label for="typeCompany" data-i18n="batch.entity_type_company"
+                  >Company Names</label
+                >
+              </div>
+              <div class="radio-option">
+                <input
+                  type="radio"
+                  id="typeIndividual"
+                  name="entity_type"
+                  value="individual"
+                />
+                <label
+                  for="typeIndividual"
+                  data-i18n="batch.entity_type_individual"
+                  >Individual Names</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="threshold" data-i18n="batch.threshold"
+              >Match Threshold (%)</label
+            >
+            <input
+              type="number"
+              id="threshold"
+              name="threshold"
+              value="80"
+              min="50"
+              max="100"
+              step="5"
+            />
+            <div class="file-upload-hint" data-i18n="batch.threshold_hint">
+              Higher values require stricter matching (recommended: 80)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="batch.file_label"
+              >Upload File (Excel or CSV)</label
+            >
+            <div class="file-upload-area" id="fileUploadArea">
+              <div class="file-upload-icon">📄</div>
+              <div class="file-upload-text" data-i18n="batch.file_browse">
+                Click to browse or drag and drop
+              </div>
+              <div class="file-upload-hint" data-i18n="batch.file_hint">
+                Supported formats: .xlsx, .xls, .csv (max 10MB)
+              </div>
+            </div>
+            <input
+              type="file"
+              id="fileInput"
+              name="file"
+              accept=".xlsx,.xls,.csv"
+            />
+            <div id="fileSelected" class="file-selected" style="display: none">
+              <div class="file-selected-icon">✓</div>
+              <div class="file-selected-info">
+                <div class="file-selected-name" id="fileName"></div>
+                <div class="file-selected-size" id="fileSize"></div>
+              </div>
+              <button
+                type="button"
+                class="file-remove"
+                onclick="removeFile()"
+                data-i18n="batch.file_remove"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            id="submitButton"
+            data-i18n="batch.submit_button"
+          >
+            Screen Entities
+          </button>
+        </form>
+      </div>
+
+      <div id="resultsContainer"></div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script>
+      const API_URL =
+        "https://europe-west1-sanction-defender-firebase.cloudfunctions.net/batch_screening";
+
+      // Initialize i18n on page load
+      window.addEventListener("DOMContentLoaded", async () => {
+        await i18n.load();
+        i18n.updatePageLanguage();
+
+        // Set active language button
+        updateLanguageButtons();
+      });
+
+      // Change language function
+      function changeLanguage(lang) {
+        i18n.setLanguage(lang);
+        i18n.updatePageLanguage();
+        updateLanguageButtons();
+      }
+
+      // Update active language button visual state
+      function updateLanguageButtons() {
+        const currentLang = i18n.getLanguage();
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          if (btn.getAttribute("data-lang") === currentLang) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+
+      // File upload handling
+      const fileUploadArea = document.getElementById("fileUploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const fileSelected = document.getElementById("fileSelected");
+
+      fileUploadArea.addEventListener("click", () => fileInput.click());
+
+      fileUploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add("drag-over");
+      });
+
+      fileUploadArea.addEventListener("dragleave", () => {
+        fileUploadArea.classList.remove("drag-over");
+      });
+
+      fileUploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove("drag-over");
+        if (e.dataTransfer.files.length > 0) {
+          fileInput.files = e.dataTransfer.files;
+          showSelectedFile();
+        }
+      });
+
+      fileInput.addEventListener("change", showSelectedFile);
+
+      function showSelectedFile() {
+        const file = fileInput.files[0];
+        if (file) {
+          document.getElementById("fileName").textContent = file.name;
+          document.getElementById("fileSize").textContent = formatFileSize(
+            file.size
+          );
+          fileSelected.style.display = "flex";
+          fileUploadArea.style.display = "none";
+        }
+      }
+
+      function removeFile() {
+        fileInput.value = "";
+        fileSelected.style.display = "none";
+        fileUploadArea.style.display = "block";
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + " bytes";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+      }
+
+      // Form submission
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          await screenEntities();
+        });
+
+      async function screenEntities() {
+        const fileInput = document.getElementById("fileInput");
+        if (!fileInput.files[0]) {
+          alert("Please select a file to upload");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append(
+          "entity_type",
+          document.querySelector('input[name="entity_type"]:checked').value
+        );
+        formData.append(
+          "threshold",
+          document.getElementById("threshold").value
+        );
+
+        const container = document.getElementById("resultsContainer");
+        const submitButton = document.getElementById("submitButton");
+
+        submitButton.disabled = true;
+        container.innerHTML =
+          '<div class="loading"><div class="spinner"></div><p>Processing file and screening entities...</p></div>';
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            displayResults(data);
+          } else {
+            container.innerHTML = `<div class="error">⚠️ ${data.error}</div>`;
+          }
+        } catch (error) {
+          container.innerHTML = `<div class="error">❌ Connection error: ${error.message}</div>`;
+        } finally {
+          submitButton.disabled = false;
+        }
+      }
+
+      function displayResults(data) {
+        const container = document.getElementById("resultsContainer");
+        const { results, summary, query_time_ms } = data;
+
+        let html = `
+                <div class="results">
+                    <div class="summary-box">
+                        <div class="summary-title">Screening Summary</div>
+                        <div class="summary-stats">
+                            <div class="stat">
+                                <div class="stat-value">${summary.total_screened}</div>
+                                <div class="stat-label">Total Screened</div>
+                            </div>
+                            <div class="stat clear">
+                                <div class="stat-value">${summary.clear}</div>
+                                <div class="stat-label">Clear</div>
+                            </div>
+                            <div class="stat warning">
+                                <div class="stat-value">${summary.potential_matches}</div>
+                                <div class="stat-label">Potential Matches</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${summary.threshold}%</div>
+                                <div class="stat-label">Threshold Used</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="results-list">
+            `;
+
+        results.forEach((result) => {
+          const statusClass =
+            result.status === "CLEAR" ? "clear" : "potential-match";
+          const statusText =
+            result.status === "CLEAR"
+              ? "CLEAR"
+              : `${result.match_count} POTENTIAL MATCH${
+                  result.match_count !== 1 ? "ES" : ""
+                }`;
+
+          html += `
+                    <div class="result-item ${statusClass}">
+                        <div class="result-header">
+                            <div class="result-name">${escapeHtml(
+                              result.name
+                            )}</div>
+                            <div class="result-status ${statusClass}">${statusText}</div>
+                        </div>
+                `;
+
+          if (result.matches.length > 0) {
+            html += '<div class="match-details">';
+            result.matches.forEach((match) => {
+              html += `
+                            <div class="match-item">
+                                <div class="match-header">
+                                    <div class="match-name">${escapeHtml(
+                                      match.name
+                                    )}</div>
+                                    <div class="confidence-badge">${
+                                      match.confidence
+                                    }% match</div>
+                                </div>
+                                <div class="match-info">
+                                    <div class="info-item">
+                                        <span class="info-label">Source:</span>
+                                        <span>${match.source}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Type:</span>
+                                        <span>${match.entity_type}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Country:</span>
+                                        <span>${match.country || "N/A"}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Programs:</span>
+                                        <span>${
+                                          match.programs.join(", ") || "N/A"
+                                        }</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+            });
+            html += "</div>";
+          }
+
+          html += "</div>";
+        });
+
+        html += `
+                    </div>
+                    <button class="export-button" onclick="exportResults()">📥 Export Results (CSV)</button>
+                </div>
+            `;
+
+        container.innerHTML = html;
+
+        // Store results for export
+        window.screeningResults = results;
+      }
+
+      function exportResults() {
+        if (!window.screeningResults) return;
+
+        let csv =
+          "Name,Status,Match Count,Matched Entity,Confidence,Source,Country,Programs\n";
+
+        window.screeningResults.forEach((result) => {
+          if (result.matches.length === 0) {
+            csv += `"${result.name}","${result.status}",0,"","","","",""\n`;
+          } else {
+            result.matches.forEach((match) => {
+              csv += `"${result.name}","${result.status}",${
+                result.match_count
+              },"${match.name}",${match.confidence},"${match.source}","${
+                match.country || ""
+              }","${match.programs.join("; ")}"\n`;
+            });
+          }
+        });
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sanctions_screening_${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    </script>
+  </body>
+</html>
