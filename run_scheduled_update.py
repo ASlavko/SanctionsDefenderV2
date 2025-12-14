@@ -34,6 +34,7 @@ if __name__ == "__main__":
     # Load env vars
     load_dotenv()
     
+    print("!!! SCRIPT VERSION: 1.1 (With Debug Prints) !!!", flush=True)
     logger.info("Starting scheduled update script...")
     try:
         run_daily_update()
