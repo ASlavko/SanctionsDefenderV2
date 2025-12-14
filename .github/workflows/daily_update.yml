@@ -29,3 +29,10 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         python run_scheduled_update.py
+
+    - name: Upload Log Artifact
+      if: always()  # Run even if the previous step failed
+      uses: actions/upload-artifact@v4
+      with:
+        name: update-logs
+        path: update_debug.log

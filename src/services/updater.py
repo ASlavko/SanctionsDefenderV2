@@ -25,13 +25,17 @@ def download_to_temp(url: str, suffix: str = ".xml") -> str:
         # delete=False is required for Windows if we want to close and reopen it elsewhere
         fd, path = tempfile.mkstemp(suffix=suffix)
         with os.fdopen(fd, 'wb') as tmp:
-            logger.info(f"Downloading {url} to {path}...")
+            msg = f"Downloading {url} to {path}..."
+            logger.info(msg)
+            print(msg, flush=True)
             with requests.get(url, stream=True, timeout=120) as r:
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         tmp.write(chunk)
-            logger.info(f"Finished downloading {url}")
+            msg_done = f"Finished downloading {url}"
+            logger.info(msg_done)
+            print(msg_done, flush=True)
         return path
     except Exception as e:
         logger.error(f"Failed to download {url}: {e}")

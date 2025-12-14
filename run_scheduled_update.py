@@ -3,15 +3,27 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Configure logging IMMEDIATELY, before any imports
-# Use force=True to override any other config
-# Log to stdout so GitHub Actions captures it
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)],
-    force=True
-)
+# Configure logging
+# We will log to both console and a file
+log_file = "update_debug.log"
+
+# Create a custom logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Clear existing handlers
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# File Handler
+file_handler = logging.FileHandler(log_file, mode='w')
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(file_handler)
+
+# Console Handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(console_handler)
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -22,10 +34,10 @@ if __name__ == "__main__":
     # Load env vars
     load_dotenv()
     
-    logging.info("Starting scheduled update script...")
+    logger.info("Starting scheduled update script...")
     try:
         run_daily_update()
-        logging.info("Scheduled update completed successfully.")
+        logger.info("Scheduled update completed successfully.")
     except Exception as e:
-        logging.error(f"Scheduled update failed: {e}")
+        logger.error(f"Scheduled update failed: {e}", exc_info=True)
         raise

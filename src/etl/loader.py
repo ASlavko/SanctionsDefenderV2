@@ -58,7 +58,9 @@ class SanctionLoader:
                 for record_dict in parser.parse(file_path):
                     count += 1
                     if count % 100 == 0:
-                        logger.info(f"[{list_type}] Processed {count} records...")
+                        msg = f"[{list_type}] Processed {count} records..."
+                        logger.info(msg)
+                        print(msg, flush=True) # Force output to stdout
                         self.db.commit()
 
                     record_id = record_dict["id"]
