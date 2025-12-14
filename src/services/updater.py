@@ -31,6 +31,7 @@ def download_to_temp(url: str, suffix: str = ".xml") -> str:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         tmp.write(chunk)
+            logger.info(f"Finished downloading {url}")
         return path
     except Exception as e:
         logger.error(f"Failed to download {url}: {e}")
