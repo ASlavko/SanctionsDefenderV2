@@ -53,14 +53,30 @@ class SanctionLoader:
             logger.info(f"Processing {list_type} from {file_path}...")
             current_log = import_logs[list_type]
             
+            # Batch list for bulk updating last_seen
+            ids_to_update_last_seen = []
+
             try:
                 count = 0
                 for record_dict in parser.parse(file_path):
                     count += 1
-                    if count % 100 == 0:
+                    
+                    # Commit batches
+                    if count % 1000 == 0:
+                        # 1. Perform bulk update for last_seen
+                        if ids_to_update_last_seen:
+                            self.db.query(SanctionRecord).filter(
+                                SanctionRecord.id.in_(ids_to_update_last_seen)
+                            ).update(
+                                {SanctionRecord.last_seen: datetime.utcnow()}, 
+                                synchronize_session=False
+                            )
+                            ids_to_update_last_seen = []
+                        
+                        # 2. Commit changes
                         msg = f"[{list_type}] Processed {count} records..."
                         logger.info(msg)
-                        print(msg, flush=True) # Force output to stdout
+                        print(msg, flush=True)
                         self.db.commit()
 
                     record_id = record_dict["id"]
@@ -124,7 +140,9 @@ class SanctionLoader:
                                 )
                                 self.db.add(change_log)
                         else:
-                            existing.last_seen = datetime.utcnow()
+                            # Optimization: Don't update object one-by-one.
+                            # Add to batch list for bulk update.
+                            ids_to_update_last_seen.append(record_id)
                             
                     else:
                         # Insert new
@@ -158,6 +176,17 @@ class SanctionLoader:
                             new_value=f"Name: {record_dict.get('original_name')}"
                         )
                         self.db.add(change_log)
+            
+                # Final flush for this file
+                if ids_to_update_last_seen:
+                    self.db.query(SanctionRecord).filter(
+                        SanctionRecord.id.in_(ids_to_update_last_seen)
+                    ).update(
+                        {SanctionRecord.last_seen: datetime.utcnow()}, 
+                        synchronize_session=False
+                    )
+                    ids_to_update_last_seen = []
+                self.db.commit()
             
             except Exception as e:
                 logger.error(f"Error processing {list_type}: {e}")
