@@ -1,4 +1,5 @@
 import rapidfuzz
+import json
 from sqlalchemy.orm import Session
 from src.db.models import SanctionRecord, MatchDecision, MatchStatus
 from src.core.matching import NameMatcher
@@ -35,10 +36,41 @@ class SearchEngine:
         # Check if table exists first (for fresh init)
         try:
             sanctions = db.query(SanctionRecord).filter(SanctionRecord.is_active == True).all()
-            self.names = [s.normalized_name for s in sanctions if s.normalized_name]
-            self.ids = [s.id for s in sanctions if s.normalized_name]
-            self.records = {s.id: s for s in sanctions}
             
+            self.names = []
+            self.ids = []
+            self.records = {}
+            
+            for s in sanctions:
+                self.records[s.id] = s
+                
+                # 1. Add Primary Name
+                if s.normalized_name:
+                    self.names.append(s.normalized_name)
+                    self.ids.append(s.id)
+                
+                # 2. Add Aliases
+                if s.alias_names:
+                    try:
+                        # Handle both JSON string and potential list (if DB adapter converts it)
+                        aliases = s.alias_names
+                        if isinstance(aliases, str):
+                            if aliases.startswith("["):
+                                aliases = json.loads(aliases)
+                            else:
+                                # Fallback for pipe-separated or other formats if any
+                                aliases = [aliases]
+                        
+                        if isinstance(aliases, list):
+                            for alias in aliases:
+                                norm_alias = NameMatcher.normalize_name(alias)
+                                if norm_alias and norm_alias != s.normalized_name:
+                                    self.names.append(norm_alias)
+                                    self.ids.append(s.id)
+                    except Exception:
+                        # Ignore alias parsing errors to keep loading safe
+                        pass
+
             # 2. Load Decisions (Memory)
             decisions = db.query(MatchDecision).all()
             self.decisions = {d.search_term_normalized: d for d in decisions}

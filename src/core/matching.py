@@ -10,11 +10,13 @@ class NameMatcher:
         # 1. Lowercase
         name = name.lower()
         
-        # 2. Remove accents
-        name = unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode('utf-8')
+        # 2. Remove accents (keep non-Latin characters)
+        name = unicodedata.normalize('NFKD', name)
+        name = "".join([c for c in name if not unicodedata.combining(c)])
         
         # 3. Remove special chars (keep alphanumeric and spaces)
-        name = re.sub(r'[^a-z0-9\s]', '', name)
+        # \w matches unicode alphanumeric characters
+        name = re.sub(r'[^\w\s]', '', name)
         
         # 4. Remove extra spaces
         name = re.sub(r'\s+', ' ', name).strip()
