@@ -15,8 +15,8 @@ class NameMatcher:
         name = "".join([c for c in name if not unicodedata.combining(c)])
         
         # 3. Remove special chars (keep alphanumeric and spaces)
-        # \w matches unicode alphanumeric characters
-        name = re.sub(r'[^\w\s]', '', name)
+        # Replace with space to avoid merging words (e.g. "Vladimir-Putin" -> "Vladimir Putin")
+        name = re.sub(r'[^\w\s]', ' ', name)
         
         # 4. Remove extra spaces
         name = re.sub(r'\s+', ' ', name).strip()
