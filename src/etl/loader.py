@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 class SanctionLoader:
     def __init__(self, db: Session):
         self.db = db
+        # CRITICAL: Prevent SQLAlchemy from expiring objects after commit.
+        # This prevents reloading every object from DB in the next loop iteration.
+        self.db.expire_on_commit = False
         self.parsers = {
             "EU": EUParser(),
             "UK": UKParser(),
@@ -61,8 +64,8 @@ class SanctionLoader:
                 for record_dict in parser.parse(file_path):
                     count += 1
                     
-                    # Commit batches
-                    if count % 1000 == 0:
+                    # Batch execution (BUT NO COMMIT)
+                    if count % 2000 == 0:
                         # 1. Perform bulk update for last_seen
                         if ids_to_update_last_seen:
                             self.db.query(SanctionRecord).filter(
@@ -73,11 +76,10 @@ class SanctionLoader:
                             )
                             ids_to_update_last_seen = []
                         
-                        # 2. Commit changes
+                        # 2. Log progress (NO COMMIT to avoid expiration)
                         msg = f"[{list_type}] Processed {count} records..."
                         logger.info(msg)
                         print(msg, flush=True)
-                        self.db.commit()
 
                     record_id = record_dict["id"]
                     seen_ids.add(record_id)
