@@ -5,6 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 from src.db.session import engine, Base, SessionLocal
 from src.api.services.engine import search_engine
 from src.api.routes import batch
+from src.api.routes import system
 from src.services.updater import run_daily_update
 import logging
 
@@ -45,6 +46,7 @@ app = FastAPI(title="SanctionDefenderV2", lifespan=lifespan)
 
 # Include Routes
 app.include_router(batch.router, prefix="/api/v1/batch", tags=["Batch Screening"])
+app.include_router(system.router, prefix="/api/v1/system", tags=["System"])
 
 @app.post("/api/v1/admin/trigger-update")
 async def trigger_update(background_tasks: BackgroundTasks):
@@ -55,3 +57,22 @@ async def trigger_update(background_tasks: BackgroundTasks):
 @app.get("/")
 def health_check():
     return {"status": "ok", "engine_loaded": search_engine.initialized}
+
+@app.get("/api/v1/system/status")
+def system_status_direct():
+    """Directly expose system status to avoid router import issues."""
+    import subprocess
+    engine = search_engine.get_status()
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        branch = None
+    try:
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        commit = None
+    return {
+        "status": "ok",
+        "engine": engine,
+        "git": {"branch": branch, "commit": commit}
+    }

@@ -115,6 +115,7 @@ def process_batch_task(batch_id: int, file_content: bytes, filename: str):
             return
 
         flagged_count = 0
+        db_results = []
         
         for res in results:
             status = res["match_status"]
@@ -128,7 +129,10 @@ def process_batch_task(batch_id: int, file_content: bytes, filename: str):
                 match_score=res["max_score"],
                 matched_sanction_id=res["potential_match"].id if res["potential_match"] else None
             )
-            db.add(db_result)
+            db_results.append(db_result)
+        
+        # Bulk save is much faster than adding one by one
+        db.bulk_save_objects(db_results)
         
         batch.status = "COMPLETED"
         batch.flagged_count = flagged_count
