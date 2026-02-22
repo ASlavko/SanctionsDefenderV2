@@ -76,6 +76,32 @@ class MatchDecision(Base):
     comment = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     user_id = Column(String) # If we have auth
+    revoked = Column(Boolean, default=False)
+
+
+class SearchLog(Base):
+    __tablename__ = "search_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    search_term = Column(String, nullable=False)
+    search_type = Column(String, nullable=False)  # 'COMPANY' or 'INDIVIDUAL'
+    result_count = Column(Integer, nullable=False)
+    user_id = Column(String, nullable=True)
+    company_id = Column(String, nullable=True)
+
+# Audit log for all decision actions
+class DecisionAudit(Base):
+    __tablename__ = "decision_audit"
+
+    id = Column(Integer, primary_key=True, index=True)
+    decision_id = Column(Integer, ForeignKey("match_decisions.id"))
+    action = Column(String)  # create, update, revoke
+    old_value = Column(Text, nullable=True)
+    new_value = Column(Text, nullable=True)
+    user_id = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    comment = Column(String, nullable=True)
 
 class ScreeningBatch(Base):
     __tablename__ = "screening_batches"
@@ -94,8 +120,20 @@ class ScreeningResult(Base):
     batch_id = Column(Integer, ForeignKey("screening_batches.id"))
     input_name = Column(String)
     match_status = Column(Enum(MatchStatus), default=MatchStatus.PENDING)
-    match_score = Column(Float)
-    matched_sanction_id = Column(String, ForeignKey("sanctions.id"), nullable=True)
     
+    # Relationship to matches
+    matches = relationship("ScreeningMatch", back_populates="result", cascade="all, delete-orphan")
     batch = relationship("ScreeningBatch")
+
+class ScreeningMatch(Base):
+    __tablename__ = "screening_matches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    screening_result_id = Column(Integer, ForeignKey("screening_results.id"))
+    sanction_id = Column(String, ForeignKey("sanctions.id"))
+    match_score = Column(Float)
+    match_name = Column(String) # The specific name/alias that matched
+    
+    result = relationship("ScreeningResult", back_populates="matches")
+    sanction = relationship("SanctionRecord")
     sanction = relationship("SanctionRecord")

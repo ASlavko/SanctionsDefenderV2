@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sanction Defender V2 - Batch Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      h1 {
+        color: #2563eb;
+      }
+      .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .btn {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      .btn:hover {
+        background-color: #1d4ed8;
+      }
+      .btn:disabled {
+        background-color: #93c5fd;
+        cursor: not-allowed;
+      }
+      #status {
+        margin-top: 1rem;
+        font-weight: bold;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      th {
+        background-color: #f9fafb;
+      }
+      .badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .badge-match {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-no-match {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sanction Defender V2 - Batch Test</h1>
+
+    <div class="card">
+      <h2>1. Upload Batch File</h2>
+      <p>Select a CSV or Excel file to screen.</p>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+      <button class="btn" onclick="uploadBatch()" id="uploadBtn">
+        Upload & Screen
+      </button>
+      <div id="uploadStatus"></div>
+    </div>
+
+    <div class="card" id="resultsCard" style="display: none">
+      <h2>2. Results <span id="batchIdDisplay"></span></h2>
+      <div id="batchMeta"></div>
+      <button
+        class="btn"
+        onclick="refreshResults()"
+        style="margin-top: 1rem; background-color: #4b5563"
+      >
+        Refresh Results
+      </button>
+
+      <h3>Flagged Records</h3>
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>Input Name</th>
+            <th>Status</th>
+            <th>Matches (Score - ID - Name)</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const API_URL = "http://127.0.0.1:8000/api/v1";
+      let currentBatchId = null;
+
+      async function uploadBatch() {
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+        if (!file) return alert("Please select a file");
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const btn = document.getElementById("uploadBtn");
+        const status = document.getElementById("uploadStatus");
+
+        btn.disabled = true;
+        status.textContent = "Uploading...";
+
+        try {
+          const response = await fetch(`${API_URL}/batch/upload`, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error(await response.text());
+
+          const data = await response.json();
+          currentBatchId = data.id;
+
+          status.textContent = `Upload successful! Batch ID: ${data.id}. Processing...`;
+          document.getElementById("resultsCard").style.display = "block";
+          document.getElementById(
+            "batchIdDisplay"
+          ).textContent = `(ID: ${data.id})`;
+
+          // Start polling
+          pollResults();
+        } catch (err) {
+          status.textContent = "Error: " + err.message;
+          status.style.color = "red";
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function refreshResults() {
+        if (!currentBatchId) return;
+
+        try {
+          const response = await fetch(`${API_URL}/batch/${currentBatchId}`);
+          const data = await response.json();
+
+          const batch = data.batch;
+          const results = data.results;
+
+          document.getElementById("batchMeta").innerHTML = `
+                    <p><strong>Status:</strong> ${batch.status}</p>
+                    <p><strong>Total Records:</strong> ${
+                      batch.total_records
+                    }</p>
+                    <p><strong>Flagged:</strong> ${
+                      batch.flagged_count !== null ? batch.flagged_count : "..."
+                    }</p>
+                `;
+
+          const tbody = document.getElementById("resultsBody");
+          tbody.innerHTML = "";
+
+          // Filter only matches for the table to keep it clean
+          const matches = results.filter((r) => r.match_status !== "NO_MATCH");
+
+          if (matches.length === 0 && batch.status === "COMPLETED") {
+            tbody.innerHTML = '<tr><td colspan="4">No matches found.</td></tr>';
+          }
+
+          matches.forEach((r) => {
+            const row = document.createElement("tr");
+
+            // Format matches list
+            let matchesHtml = "";
+            if (r.matches && r.matches.length > 0) {
+              matchesHtml =
+                '<ul style="margin: 0; padding-left: 1.2rem;">' +
+                r.matches
+                  .map(
+                    (m) =>
+                      `<li><strong>${m.match_score.toFixed(1)}</strong> - ${
+                        m.sanction_id
+                      } - ${m.match_name}</li>`
+                  )
+                  .join("") +
+                "</ul>";
+            } else {
+              matchesHtml = "-";
+            }
+
+            row.innerHTML = `
+                        <td>${r.input_name}</td>
+                        <td><span class="badge badge-match">${r.match_status}</span></td>
+                        <td>${matchesHtml}</td>
+                    `;
+            tbody.appendChild(row);
+          });
+        } catch (err) {
+          console.error("Error fetching results:", err);
+        }
+      }
+
+      function pollResults() {
+        refreshResults();
+        // Simple polling every 2 seconds for a few times
+        let count = 0;
+        const interval = setInterval(() => {
+          refreshResults();
+          count++;
+          if (count > 30) clearInterval(interval); // Stop after 1 min
+        }, 2000);
+      }
+    </script>
+  </body>
+</html>

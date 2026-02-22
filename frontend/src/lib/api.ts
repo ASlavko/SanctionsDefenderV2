@@ -125,3 +125,30 @@ export function apiUrl(path: string) {
   const trimmed = path.startsWith("/") ? path.slice(1) : path;
   return `${apiBase}/${trimmed}`;
 }
+
+// Sanction List KPI API
+export interface SanctionListBreakdown {
+  individual_count: number;
+  entity_count: number;
+  aircraft_count: number;
+  vessel_count: number;
+  other_count: number;
+}
+
+export interface SanctionListKPI {
+  source: string;
+  last_update: string | null;
+  records_added: number;
+  records_updated: number;
+  records_removed: number;
+  total_records: number;
+  breakdown: SanctionListBreakdown;
+}
+
+export async function fetchSanctionListKPIs(days: number = 1): Promise<SanctionListKPI[]> {
+  const url = days > 1 ? `/api/v1/kpi/sanction-lists?days=${days}` : "/api/v1/kpi/sanction-lists";
+  const res = await fetch(apiUrl(url));
+  if (!res.ok) throw new Error("Failed to fetch sanction list KPIs");
+  return res.json();
+}
+

@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/status")
 def system_status():
     # Engine details
-    engine = search_engine.get_status()
+    engine = search_engine.status()
 
     # Git details (best-effort; safe fallbacks)
     branch = None

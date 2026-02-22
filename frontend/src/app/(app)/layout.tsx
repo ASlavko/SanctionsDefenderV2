@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { AppBar, Box, Container, Toolbar, Typography, Button, Stack } from "@mui/material";
 import Link from "next/link";
@@ -23,6 +23,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </Button>
             <Button color="inherit" component={Link} href="/batch-screening">
               Batch screening
+            </Button>
+            <Button color="inherit" component={Link} href="/sanction-lists">
+              Sanction Lists
             </Button>
           </Stack>
         </Toolbar>

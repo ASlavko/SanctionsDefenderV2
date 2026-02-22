@@ -8,3 +8,9 @@ openpyxl
 python-multipart
 requests
 python-dotenv
+google-genai
+pydantic
+pydantic-settings
+pytest
+mcp[cli]>=1.0.0
+anyascii

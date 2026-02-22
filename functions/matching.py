@@ -6,6 +6,7 @@ Implements multiple matching algorithms with weighted scoring.
 import unicodedata
 import re
 from typing import Dict, List, Tuple
+from anyascii import anyascii
 
 
 class NameMatcher:
@@ -22,14 +23,18 @@ class NameMatcher:
     @staticmethod
     def normalize_name(name: str) -> str:
         """
-        Normalize name by removing diacritics and standardizing format.
-        Converts: "José García" -> "Jose Garcia"
+        Normalize name by transliterating to Latin, removing diacritics and standardizing format.
+        Converts: "Путин" -> "putin", "José García" -> "jose garcia"
         """
-        # Convert to NFD (decomposed) form to separate base chars from diacritics
+        # 1. Transliterate to Latin (Transcription)
+        # Handle Russian, Arabic, Chinese, etc.
+        name = anyascii(name)
+        
+        # 2. Convert to NFD (decomposed) form to separate base chars from diacritics
         nfd = unicodedata.normalize('NFD', name)
-        # Remove combining characters (diacritics)
+        # 3. Remove combining characters (diacritics)
         without_diacritics = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
-        # Remove extra whitespace and convert to lowercase
+        # 4. Remove extra whitespace and convert to lowercase
         return ' '.join(without_diacritics.lower().split())
     
     @staticmethod

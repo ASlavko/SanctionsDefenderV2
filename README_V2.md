@@ -14,10 +14,19 @@
    pip install -r requirements.txt
    ```
 
-3. **Run the API**
+3. **Run the API (Backend)**
    ```bash
-   uvicorn src.api.main:app --reload
+   uvicorn src.api.main:app --reload --port 8001
    ```
+   *(Note: Using port 8001 is required for the frontend to connect properly)*
+
+4. **Run the Frontend (Next.js)**
+   Open a new terminal in the `frontend` directory and run:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   The application dashboard will be accessible at: `http://localhost:3000/dashboard`
 
 ## Features
 

@@ -26,10 +26,11 @@ class SanctionLoader:
         """
         logger.info("Starting Sanctions Update...")
         
-        # 1. Load all current active IDs from DB to track what's missing
+        # 1. Load all current records from DB (not just active ones)
+        # This ensures we can reactivate previously inactive records
         # Map ID -> SanctionRecord object
         current_records = {
-            r.id: r for r in self.db.query(SanctionRecord).filter(SanctionRecord.is_active == True).all()
+            r.id: r for r in self.db.query(SanctionRecord).all()
         }
         
         seen_ids = set()
@@ -90,6 +91,13 @@ class SanctionLoader:
                         # Update existing
                         existing = current_records[record_id]
                         
+                        # Reactivate if previously inactive
+                        was_inactive = not existing.is_active
+                        if was_inactive:
+                            existing.is_active = True
+                            existing.last_updated = datetime.utcnow()
+                            current_log.records_updated += 1
+                        
                         # Check for changes
                         changes = []
                         fields_to_check = [
@@ -128,7 +136,8 @@ class SanctionLoader:
                         if is_changed:
                             existing.last_updated = datetime.utcnow()
                             existing.last_seen = datetime.utcnow()
-                            current_log.records_updated += 1
+                            if not was_inactive:  # Don't double-count if we already counted reactivation
+                                current_log.records_updated += 1
                             
                             # Log changes
                             for field, old_v, new_v in changes:
@@ -144,7 +153,10 @@ class SanctionLoader:
                         else:
                             # Optimization: Don't update object one-by-one.
                             # Add to batch list for bulk update.
-                            ids_to_update_last_seen.append(record_id)
+                            if not was_inactive:  # Only batch if we didn't already update
+                                ids_to_update_last_seen.append(record_id)
+                            else:
+                                existing.last_seen = datetime.utcnow()
                             
                     else:
                         # Insert new

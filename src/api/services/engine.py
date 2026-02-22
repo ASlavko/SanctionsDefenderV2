@@ -5,6 +5,7 @@ from src.db.models import SanctionRecord, MatchDecision, MatchStatus
 from src.core.matching import NameMatcher
 from typing import List, Dict, Tuple
 import time
+import numpy as np
 
 class SearchEngine:
     _instance = None
@@ -118,44 +119,42 @@ class SearchEngine:
         results = rapidfuzz.process.extract(
             normalized_query,
             self.names,
-            limit=limit,
-            scorer=rapidfuzz.fuzz.token_sort_ratio
+            limit=limit * 10,  # get more to ensure we can filter by list_type
+            scorer=rapidfuzz.fuzz.token_set_ratio
         )
-        
         matches = []
         for match_name, score, idx in results:
             if score < threshold:
                 continue
-                
             record_id = self.ids[idx]
             record = self.records.get(record_id)
-            
             matches.append({
                 "record": record,
                 "score": score,
                 "status": MatchStatus.PENDING,
                 "auto_resolved": False
             })
-            
-        return matches
+        # Group by list_type and keep only the top match per list
+        top_matches = {}
+        for m in matches:
+            record = m["record"]
+            list_type = getattr(record, "list_type", None)
+            if not list_type:
+                continue
+            if list_type not in top_matches or m["score"] > top_matches[list_type]["score"]:
+                top_matches[list_type] = m
+        return list(top_matches.values())
 
     def batch_search(self, names: List[str], threshold: int = 85) -> List[Dict]:
         """
-        Optimized for batch processing using rapidfuzz.process.cdist (Vectorized).
+        Performs batch optimized search.
         """
-        import numpy as np
-        
-        # If no names to search, return empty
-        if not names:
-            return []
-            
         # If no sanctions loaded, return no matches
         if not self.names:
             return [{
                 "input_name": name,
                 "match_status": MatchStatus.NO_MATCH,
-                "max_score": 0.0,
-                "potential_match": None
+                "matches": []
             } for name in names]
 
         results = []
@@ -172,39 +171,54 @@ class SearchEngine:
             matrix = rapidfuzz.process.cdist(
                 normalized_chunk, 
                 self.names, 
-                scorer=rapidfuzz.fuzz.token_sort_ratio,
+                scorer=rapidfuzz.fuzz.token_set_ratio,
                 dtype=np.float32
             )
             
-            # Find best match for each query in the chunk
-            max_scores = np.max(matrix, axis=1)
-            max_indices = np.argmax(matrix, axis=1)
-            
-            for j, score in enumerate(max_scores):
-                input_name = chunk[j]
+            # Find all matches above threshold for each query in the chunk
+            for j, input_name in enumerate(chunk):
+                row_scores = matrix[j]
+                # Get indices where score >= threshold
+                match_indices = np.where(row_scores >= threshold)[0]
                 
-                if score < threshold:
+                if len(match_indices) == 0:
                     results.append({
                         "input_name": input_name,
                         "match_status": MatchStatus.NO_MATCH,
-                        "max_score": float(score),
-                        "potential_match": None
+                        "matches": []
                     })
                 else:
-                    idx = max_indices[j]
-                    record_id = self.ids[idx]
-                    record = self.records.get(record_id)
-                    
+                    matches = []
+                    for idx in match_indices:
+                        score = float(row_scores[idx])
+                        record_id = self.ids[idx]
+                        record = self.records.get(record_id)
+                        matched_name = self.names[idx] # The specific name that matched
+                        matches.append({
+                            "record": record,
+                            "score": score,
+                            "matched_name": matched_name
+                        })
+                    # Group by list_type and keep only the top match per list
+                    top_matches = {}
+                    for m in matches:
+                        record = m["record"]
+                        list_type = getattr(record, "list_type", None)
+                        if not list_type:
+                            continue
+                        if list_type not in top_matches or m["score"] > top_matches[list_type]["score"]:
+                            top_matches[list_type] = m
+                    top_matches_list = list(top_matches.values())
+                    # Sort by score descending (optional, for consistent output)
+                    top_matches_list.sort(key=lambda x: x["score"], reverse=True)
                     results.append({
                         "input_name": input_name,
                         "match_status": MatchStatus.PENDING,
-                        "max_score": float(score),
-                        "potential_match": record
+                        "matches": top_matches_list
                     })
-                    
         return results
 
-    def get_status(self) -> Dict[str, any]:
+    def status(self):
         """
         Returns runtime details useful for diagnostics and status checks.
         """
@@ -222,7 +236,7 @@ class SearchEngine:
             "sanctions_loaded": sanctions_loaded,
             "unique_records": unique_records,
             "decisions_loaded": decisions_loaded,
-            "scorer": "rapidfuzz.fuzz.token_sort_ratio",
+            "scorer": "rapidfuzz.fuzz.token_set_ratio",
             "threshold_default": 85,
             "chunk_size": 500,
             "vectorized_batch": True,
