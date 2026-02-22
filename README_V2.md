@@ -41,3 +41,15 @@
 - `src/core`: Core logic (matching, normalization).
 - `src/db`: Database models and session.
 - `src/etl`: Parsers and Loader for daily updates.
+
+## Database Workflow (Neon + Alembic)
+
+We use **Neon Database** and **Alembic** to safely manage database schemas and testing:
+
+1. **GitHub PR Integration**: When you open a Pull Request (PR) on GitHub, a GitHub Actions workflow (`.github/workflows/neon-preview.yml`) automatically creates an isolated preview database branch in Neon.
+2. **Schema Migrations**: The action automatically runs `alembic upgrade head` on the preview branch to safely apply any schema changes you made in `src/db/models.py`.
+3. **Local Schema Changes**:
+   - If you modify `src/db/models.py` locally, run: 
+     `alembic revision --autogenerate -m "description of changes"`
+   - This creates a migration script in `alembic/versions/`. Commit this script.
+4. **Applying to Main**: When a PR is merged into `main`, you must ensure `alembic upgrade head` is run against the production database to apply the finalized schema changes.
